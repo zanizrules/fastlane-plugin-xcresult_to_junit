@@ -21,7 +21,9 @@ Metrics/ModuleLength:
   Enabled: false
 Style/VariableNumber:
   Enabled: false
-Style/MethodMissing:
+Style/MethodMissingSuper:
+  Enabled: false
+Style/MissingRespondToMissing:
   Enabled: false
 MultilineBlockChain:
   Enabled: false
@@ -121,7 +123,7 @@ Layout/SpaceAroundOperators:
   Exclude:
   - "**/spec/actions_specs/xcodebuild_spec.rb"
 AllCops:
-  TargetRubyVersion: 2.0
+  TargetRubyVersion: 2.5
   Include:
   - "*/lib/assets/*Template"
   - "*/lib/assets/*TemplateAndroid"
