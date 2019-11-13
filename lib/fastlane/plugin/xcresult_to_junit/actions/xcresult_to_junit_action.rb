@@ -28,7 +28,7 @@ module Fastlane
                     duration = test['duration']['_value'] if test['duration']
                     testcase = { name: test['name']['_value'], time: duration }
                     if test['testStatus']['_value'] == 'Failure'
-                      failure = Helper::XcresultToJunitHelper.load_object(ENV['XCRESULT_TO_JUNIT_XCRESULT_PATH'], test['summaryRef']['id']['_value'])['failureSummaries']['_values'][0]
+                      failure = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test['summaryRef']['id']['_value'])['failureSummaries']['_values'][0]
                       filename = failure['fileName']['_value']
                       message = failure['message']['_value']
                       if filename == '<unknown>'
@@ -51,6 +51,7 @@ module Fastlane
             Helper::XcresultToJunitHelper.generate_junit(junit_folder, test_suites)
           end
         end
+        UI.message("The xcresult_to_junit plugin has finished!")
       end
 
       def self.description
