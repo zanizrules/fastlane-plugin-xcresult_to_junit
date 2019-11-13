@@ -6,6 +6,7 @@ Gemfile.lock
 /_yardoc/
 /doc/
 /rdoc/
+fastlane/test_output/
 fastlane/README.md
 fastlane/report.xml
 fastlane/sample.xcresult
