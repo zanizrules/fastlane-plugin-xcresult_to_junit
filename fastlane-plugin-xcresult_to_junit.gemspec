@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.email         = 'shane.birdsall@fiserv.com'
 
   spec.summary       = 'Produces junit xml files from Xcode 11+ xcresult files'
-  # spec.homepage      = "https://github.com/<GITHUB_USERNAME>/fastlane-plugin-xcresult_to_junit"
+  spec.homepage      = "https://github.com/zanizrules/fastlane-plugin-xcresult_to_junit"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*"] + %w(README.md LICENSE)

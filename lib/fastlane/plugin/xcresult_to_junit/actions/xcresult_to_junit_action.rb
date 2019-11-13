@@ -1,7 +1,5 @@
 require 'fastlane/action'
 require_relative '../helper/xcresult_to_junit_helper'
-require 'json'
-require 'fileutils'
 
 module Fastlane
   module Actions
