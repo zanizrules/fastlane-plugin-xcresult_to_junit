@@ -55,7 +55,7 @@ module Fastlane
       end
 
       def self.junit_testcase_start(suite, testcase)
-        print "<testcase classname=#{suite[:name].encode xml: :attr} name=#{testcase[:name].encode xml: :attr} time='#{testcase[:time]}'"
+        print "<testcase name=#{testcase[:name].encode xml: :attr} classname=#{suite[:name].encode xml: :attr} time='#{testcase[:time]}'"
       end
 
       def self.junit_testcase_success
