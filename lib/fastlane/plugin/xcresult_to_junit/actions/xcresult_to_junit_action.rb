@@ -26,7 +26,7 @@ module Fastlane
                   test_class['subtests']['_values'].each do |test|
                     duration = 0
                     duration = test['duration']['_value'] if test['duration']
-                    testcase = { name: test['name']['_value'], time: duration }
+                    testcase = { name: test['name']['_value'].tr('()', ''), time: duration }
                     if test['testStatus']['_value'] == 'Failure'
                       failure = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test['summaryRef']['id']['_value'])['failureSummaries']['_values'][0]
                       filename = failure['fileName']['_value']
