@@ -9,6 +9,7 @@ module Fastlane
         all_results = Helper::XcresultToJunitHelper.load_results(params[:xcresult_path])['actions']['_values']
         all_results.each do |test_run|
           if test_run['actionResult']['testsRef'] # Skip if section has no testRef data as this means its not a test run
+            junit_folder = Helper::XcresultToJunitHelper.save_device_details_to_file(params[:output_path], test_run['runDestination'])
             test_run_id = test_run['actionResult']['testsRef']['id']['_value']
             all_tests = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test_run_id)['summaries']['_values'][0]['testableSummaries']['_values']
             test_suites = []
@@ -21,12 +22,26 @@ module Fastlane
               end
               test_classes = target['tests']['_values'][0]['subtests']['_values'][0]['subtests']['_values']
               test_classes.each do |test_class|
-                suite = { name: "#{target_name}.#{test_class['name']['_value']}", cases: [] }
+                suite_name = "#{target_name}.#{test_class['name']['_value']}"
+                suite = { name: suite_name, cases: [] }
                 if test_class['subtests']
                   test_class['subtests']['_values'].each do |test|
                     duration = 0
                     duration = test['duration']['_value'] if test['duration']
-                    testcase = { name: test['name']['_value'].tr('()', ''), time: duration }
+                    testcase_name = test['name']['_value'].tr('()', '')
+                    testcase = { name: testcase_name, time: duration }
+
+                    summaryRef = test['summaryRef']['id']['_value']
+                    ref = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], summaryRef)['activitySummaries']['_values']
+                    ref.each do |summary|
+                      if summary['attachments']
+                        summary['attachments']['_values'].each do |attachment|
+                          id = attachment['payloadRef']['id']['_value']
+                          Helper::XcresultToJunitHelper.fetch_screenshot(params[:xcresult_path], "#{junit_folder}/attachments/#{suite_name}.#{testcase_name}", "#{id}.png", id)
+                        end
+                      end
+                    end
+
                     if test['testStatus']['_value'] == 'Failure'
                       failure = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test['summaryRef']['id']['_value'])['failureSummaries']['_values'][0]
                       filename = failure['fileName']['_value']
@@ -47,7 +62,6 @@ module Fastlane
                 test_suites << suite
               end
             end
-            junit_folder = Helper::XcresultToJunitHelper.save_device_details_to_file(params[:output_path], test_run['runDestination'])
             Helper::XcresultToJunitHelper.generate_junit(junit_folder, test_suites)
           end
         end

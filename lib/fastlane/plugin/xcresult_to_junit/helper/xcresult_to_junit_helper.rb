@@ -15,6 +15,13 @@ module Fastlane
         JSON.load FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool get --format json --path #{xcresult_path}")
       end
 
+      def self.fetch_screenshot(xcresult_path, output_path, file_name, id)
+        if !File.directory?(output_path)
+          FileUtils.mkdir output_path
+        end
+        JSON.load FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool export --path #{xcresult_path} --output-path #{output_path}/#{file_name} --id #{id} --type file")
+      end
+
       def self.save_device_details_to_file(output_path, device_destination)
         device_udid = device_destination['targetDeviceRecord']['identifier']['_value']
         device_details = {
@@ -26,6 +33,7 @@ module Fastlane
         junit_folder = "#{output_path}/ios-#{device_udid}.junit"
         FileUtils.rm_rf junit_folder
         FileUtils.mkdir junit_folder
+        FileUtils.mkdir "#{junit_folder}/attachments"
         File.open("#{junit_folder}/device.json", 'w') do |f|
           f << device_details
         end
