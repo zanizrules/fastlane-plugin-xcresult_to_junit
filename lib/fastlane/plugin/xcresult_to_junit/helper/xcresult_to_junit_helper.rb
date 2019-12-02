@@ -22,6 +22,12 @@ module Fastlane
         JSON.load FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool export --path #{xcresult_path} --output-path #{output_path}/#{file_name} --id #{id} --type file")
       end
 
+      def self.save_screenshot_mapping(map_hash, output_path)
+        File.open("#{output_path}/map.json", 'w') do |f|
+          f << map_hash.to_json
+        end
+      end
+
       def self.save_device_details_to_file(output_path, device_destination)
         device_udid = device_destination['targetDeviceRecord']['identifier']['_value']
         device_details = {

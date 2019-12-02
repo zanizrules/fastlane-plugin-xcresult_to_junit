@@ -1,3 +1,4 @@
+require 'date'
 require 'fastlane/action'
 require_relative '../helper/xcresult_to_junit_helper'
 
@@ -9,6 +10,7 @@ module Fastlane
         all_results = Helper::XcresultToJunitHelper.load_results(params[:xcresult_path])['actions']['_values']
         all_results.each do |test_run|
           if test_run['actionResult']['testsRef'] # Skip if section has no testRef data as this means its not a test run
+            map = {}
             junit_folder = Helper::XcresultToJunitHelper.save_device_details_to_file(params[:output_path], test_run['runDestination'])
             test_run_id = test_run['actionResult']['testsRef']['id']['_value']
             all_tests = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test_run_id)['summaries']['_values'][0]['testableSummaries']['_values']
@@ -30,14 +32,19 @@ module Fastlane
                     duration = test['duration']['_value'] if test['duration']
                     testcase_name = test['name']['_value'].tr('()', '')
                     testcase = { name: testcase_name, time: duration }
+                    map["#{suite_name}.#{testcase_name}"] = {'files' => [], 'tags' => []}
 
                     summaryRef = test['summaryRef']['id']['_value']
                     ref = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], summaryRef)['activitySummaries']['_values']
                     ref.each do |summary|
                       if summary['attachments']
                         summary['attachments']['_values'].each do |attachment|
+                          timestamp = DateTime.parse(attachment['timestamp']['_value']).to_time.to_i
+                          name = attachment['name']['_value']
+                          folder_name = "#{suite_name}.#{testcase_name}"
                           id = attachment['payloadRef']['id']['_value']
-                          Helper::XcresultToJunitHelper.fetch_screenshot(params[:xcresult_path], "#{junit_folder}/attachments/#{suite_name}.#{testcase_name}", "#{id}.png", id)
+                          Helper::XcresultToJunitHelper.fetch_screenshot(params[:xcresult_path], "#{junit_folder}/attachments/#{folder_name}", "#{id}.png", id)
+                          map[folder_name]['files'].push({'description' => name, 'mime-type' => 'image/png', 'path' => "#{folder_name}/#{id}.png", 'timestamp' => timestamp})
                         end
                       end
                     end
@@ -63,6 +70,7 @@ module Fastlane
               end
             end
             Helper::XcresultToJunitHelper.generate_junit(junit_folder, test_suites)
+            Helper::XcresultToJunitHelper.save_screenshot_mapping(map, "#{junit_folder}/attachments/")
           end
         end
         UI.message("The xcresult_to_junit plugin has finished!")
