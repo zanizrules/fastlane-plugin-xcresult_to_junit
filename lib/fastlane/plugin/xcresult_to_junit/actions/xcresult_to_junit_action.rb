@@ -31,8 +31,10 @@ module Fastlane
                     duration = 0
                     duration = test['duration']['_value'] if test['duration']
                     testcase_name = test['name']['_value'].tr('()', '')
+                    tags = testcase_name.split('_')[1..-1]
+                    testcase_name = testcase_name.split('_').first
                     testcase = { name: testcase_name, time: duration }
-                    map["#{suite_name}.#{testcase_name}"] = {'files' => [], 'tags' => []}
+                    map["#{suite_name}.#{testcase_name}"] = {'files' => [], 'tags' => tags}
 
                     summaryRef = test['summaryRef']['id']['_value']
                     ref = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], summaryRef)['activitySummaries']['_values']
