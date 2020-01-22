@@ -22,7 +22,10 @@ module Fastlane
                 test_suites << { name: target_name, error: failure_summary['message']['_value'] }
                 next
               end
-              test_classes = target['tests']['_values'][0]['subtests']['_values'][0]['subtests']['_values']
+              test_classes = []
+              if defined?(target['tests']['_values'][0]['subtests']['_values'][0]['subtests']['_values'])
+                test_classes = target['tests']['_values'][0]['subtests']['_values'][0]['subtests']['_values']
+              end
               test_classes.each do |test_class|
                 suite_name = "#{target_name}.#{test_class['name']['_value']}"
                 suite = { name: suite_name, cases: [] }
