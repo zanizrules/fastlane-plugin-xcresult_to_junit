@@ -19,7 +19,7 @@ module Fastlane
         if !File.directory?(output_path)
           FileUtils.mkdir output_path
         end
-        JSON.load FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool export --path #{xcresult_path} --output-path #{output_path}/#{file_name} --id #{id} --type file")
+        JSON.load FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool export --path #{xcresult_path} --output-path \"#{output_path}/#{file_name}\" --id #{id} --type file")
       end
 
       def self.save_screenshot_mapping(map_hash, output_path)

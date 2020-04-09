@@ -47,11 +47,12 @@ module Fastlane
                           if summary['attachments']
                             summary['attachments']['_values'].each do |attachment|
                               timestamp = DateTime.parse(attachment['timestamp']['_value']).to_time.to_i
+                              filename = attachment['filename']['_value']
                               name = attachment['name']['_value']
                               folder_name = "#{suite_name}.#{testcase_name}"
                               id = attachment['payloadRef']['id']['_value']
-                              Helper::XcresultToJunitHelper.fetch_screenshot(params[:xcresult_path], "#{junit_folder}/attachments/#{folder_name}", "#{id}.png", id)
-                              map[folder_name]['files'].push({'description' => name, 'mime-type' => 'image/png', 'path' => "#{folder_name}/#{id}.png", 'timestamp' => timestamp})
+                              Helper::XcresultToJunitHelper.fetch_screenshot(params[:xcresult_path], "#{junit_folder}/attachments/#{folder_name}", "#{filename}", id)
+                              map[folder_name]['files'].push({'description' => name, 'mime-type' => 'image/png', 'path' => "#{folder_name}/#{filename}", 'timestamp' => timestamp})
                             end
                           end
                         end
