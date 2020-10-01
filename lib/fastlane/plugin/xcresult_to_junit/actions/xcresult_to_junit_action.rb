@@ -90,9 +90,9 @@ module Fastlane
 
                     if test['testStatus']['_value'] == 'Failure'
                       failure = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test['summaryRef']['id']['_value'])['failureSummaries']['_values'][0]
-                      filename = failure['fileName']['_value']
+                      filename = failure.dig('fileName', '_value')
                       message = failure['message']['_value']
-                      if filename == '<unknown>'
+                      if filename == '<unknown>' || filename.nil?
                         testcase[:error] = message
                       else
                         testcase[:failure] = message
