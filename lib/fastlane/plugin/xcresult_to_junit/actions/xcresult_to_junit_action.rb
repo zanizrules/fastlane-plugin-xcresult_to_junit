@@ -57,6 +57,35 @@ module Fastlane
                           end
                         end
                       end
+
+                      if defined?(ref['performanceMetrics']['_value'])
+                        performancemetrics = ""
+                        ref['performanceMetrics']['_values'].each do |metric|
+                          metricname = metric['displayName']['_value']
+                          if defined?(metric['baselineAverage']['_value'])
+                            metricbaseline = metric['baselineAverage']['_value']
+                          else
+                            metricbaseline = 0
+                          end
+                          metricmaxdev = metric['maxPercentRelativeStandardDeviation']['_value']
+                          metricunit = metric['unitOfMeasurement']['_value']
+                          metricave = 0
+                          measurecount = 0
+                          metric['measurements']['_values'].each do |measure|
+                            metricave = metricave + measure['_value'].to_f
+                            measurecount += 1
+                          end
+                          metricave = (metricave/measurecount).round(2)
+                          if metricbaseline != 0
+                            metricresult = (((metricbaseline.to_f-metricave)/metricbaseline.to_f)*100).round(2)
+                          else
+                            metricresult = 0
+                          end
+                          performancemetric = "\nMetric: #{metricname}\nResult: #{metricresult}%\nAverage: #{metricave}#{metricunit}\nBaseline: #{metricbaseline}#{metricunit}\nMax Deviation: #{metricmaxdev}%\n\n"
+                          performancemetrics << performancemetric
+                        end
+                        testcase[:performance] = performancemetrics
+                      end
                     end
 
                     if test['testStatus']['_value'] == 'Failure'
