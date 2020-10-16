@@ -69,23 +69,23 @@ module Fastlane
       end
 
       def self.junit_testcase_start(suite, testcase)
-        print "<testcase name=#{testcase[:name].encode xml: :attr} classname=#{suite[:name].encode xml: :attr} time='#{testcase[:time]}'"
+        print "<testcase name=#{testcase[:name].encode xml: :attr} classname=#{suite[:name].encode xml: :attr} time='#{testcase[:time]}'>"
       end
 
-      def self.junit_testcase_success
-        puts '/>'
+      def self.junit_testcase_end
+        puts '</testcase>'
       end
 
       def self.junit_testcase_failure(testcase)
-        puts '>'
         puts "<failure message=#{testcase[:failure].encode xml: :attr}>#{testcase[:failure_location].encode xml: :text}</failure>"
-        puts '</testcase>'
       end
 
       def self.junit_testcase_error(testcase)
-        puts '>'
         puts "<error>#{testcase[:error].encode xml: :text}</error>"
-        puts '</testcase>'
+      end
+
+      def self.junit_testcase_performance(testcase)
+        puts "<system-out>#{testcase[:performance]}</system-out>"
       end
 
       def self.generate_junit(junit_folder, test_suites)
@@ -104,9 +104,11 @@ module Fastlane
                   Helper::XcresultToJunitHelper.junit_testcase_failure(testcase)
                 elsif testcase[:error]
                   Helper::XcresultToJunitHelper.junit_testcase_error(testcase)
-                else
-                  Helper::XcresultToJunitHelper.junit_testcase_success()
                 end
+                if testcase[:performance]
+                  Helper::XcresultToJunitHelper.junit_testcase_performance(testcase)
+                end
+                Helper::XcresultToJunitHelper.junit_testcase_end
               end
             end
             Helper::XcresultToJunitHelper.junit_suite_end()
