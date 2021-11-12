@@ -9,108 +9,106 @@ module Fastlane
         UI.message("The xcresult_to_junit plugin has started!")
         all_results = Helper::XcresultToJunitHelper.load_results(params[:xcresult_path])['actions']['_values']
         all_results.each do |test_run|
-          if test_run['actionResult']['testsRef'] # Skip if section has no testRef data as this means its not a test run
-            map = {}
-            junit_folder = Helper::XcresultToJunitHelper.save_device_details_to_file(params[:output_path], test_run['runDestination'])
-            test_run_id = test_run['actionResult']['testsRef']['id']['_value']
-            all_tests = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test_run_id)['summaries']['_values'][0]['testableSummaries']['_values']
-            test_suites = []
-            all_tests.each do |target|
-              target_name = target['targetName']['_value']
-              unless target['tests']
-                failure_summary = target['failureSummaries']['_values'][0]
-                test_suites << { name: target_name, error: failure_summary['message']['_value'] }
-                next
-              end
-              test_classes = []
-              if defined?(target['tests']['_values'][0]['subtests']['_values'][0]['subtests']['_values'])
-                test_classes = target['tests']['_values'][0]['subtests']['_values'][0]['subtests']['_values']
-              end
-              test_classes.each do |test_class|
-                suite_name = "#{target_name}.#{test_class['name']['_value']}"
-                suite = { name: suite_name, cases: [] }
-                if test_class['subtests']
-                  test_class['subtests']['_values'].each do |test|
-                    duration = 0
-                    duration = test['duration']['_value'] if test['duration']
-                    testcase_name = test['name']['_value'].tr('()', '')
-                    tags = testcase_name.split('_')[1..-1]
-                    testcase_name = testcase_name.split('_').first
-                    testcase = { name: testcase_name, time: duration }
-                    map["#{suite_name}.#{testcase_name}"] = {'files' => [], 'tags' => tags}
-
-                    if defined?(test['summaryRef']['id']['_value'])
-                      summaryRef = test['summaryRef']['id']['_value']
-                      ref = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], summaryRef)
-                      if defined?(ref['activitySummaries']['_values'])
-                        ref['activitySummaries']['_values'].each do |summary|
-                          if summary['attachments']
-                            summary['attachments']['_values'].each do |attachment|
-                              timestamp = DateTime.parse(attachment['timestamp']['_value']).to_time.to_i
-                              filename = attachment['filename']['_value']
-                              name = attachment['name']['_value']
-                              folder_name = "#{suite_name}.#{testcase_name}"
-                              id = attachment['payloadRef']['id']['_value']
-                              Helper::XcresultToJunitHelper.fetch_screenshot(params[:xcresult_path], "#{junit_folder}/attachments/#{folder_name}", "#{filename}", id)
-                              map[folder_name]['files'].push({'description' => name, 'mime-type' => 'image/png', 'path' => "#{folder_name}/#{filename}", 'timestamp' => timestamp})
-                            end
-                          end
-                        end
-                      end
-
-                      if defined?(ref['performanceMetrics']['_value'])
-                        performancemetrics = ""
-                        ref['performanceMetrics']['_values'].each do |metric|
-                          metricname = metric['displayName']['_value']
-                          if defined?(metric['baselineAverage']['_value'])
-                            metricbaseline = metric['baselineAverage']['_value']
-                          else
-                            metricbaseline = 0
-                          end
-                          metricmaxdev = metric['maxPercentRelativeStandardDeviation']['_value']
-                          metricunit = metric['unitOfMeasurement']['_value']
-                          metricave = 0
-                          measurecount = 0
-                          metric['measurements']['_values'].each do |measure|
-                            metricave = metricave + measure['_value'].to_f
-                            measurecount += 1
-                          end
-                          metricave = (metricave/measurecount).round(2)
-                          if metricbaseline != 0
-                            metricresult = (((metricbaseline.to_f-metricave)/metricbaseline.to_f)*100).round(2)
-                          else
-                            metricresult = 0
-                          end
-                          performancemetric = "\nMetric: #{metricname}\nResult: #{metricresult}%\nAverage: #{metricave}#{metricunit}\nBaseline: #{metricbaseline}#{metricunit}\nMax Deviation: #{metricmaxdev}%\n\n"
-                          performancemetrics << performancemetric
-                        end
-                        testcase[:performance] = performancemetrics
-                      end
-                    end
-
-                    if test['testStatus']['_value'] == 'Failure'
-                      failure = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test['summaryRef']['id']['_value'])['failureSummaries']['_values'][0]
-                      filename = failure['fileName']['_value']
-                      message = failure['message']['_value']
-                      if filename == '<unknown>'
-                        testcase[:error] = message
-                      else
-                        testcase[:failure] = message
-                        testcase[:failure_location] = "#{filename}:#{failure['lineNumber']['_value']}"
-                      end
-                    end
-                    suite[:cases] << testcase
-                  end
-                end
-                suite[:count] = suite[:cases].size
-                suite[:failures] = suite[:cases].count { |testcase| testcase[:failure] }
-                suite[:errors] = suite[:cases].count { |testcase| testcase[:error] }
-                test_suites << suite
-              end
+          next unless test_run['actionResult']['testsRef'] # Skip if section has no testRef data as this means its not a test run
+          map = {}
+          junit_folder = Helper::XcresultToJunitHelper.save_device_details_to_file(params[:output_path], test_run['runDestination'])
+          test_run_id = test_run['actionResult']['testsRef']['id']['_value']
+          all_tests = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test_run_id)['summaries']['_values'][0]['testableSummaries']['_values']
+          test_suites = []
+          all_tests.each do |target|
+            target_name = target['targetName']['_value']
+            unless target['tests']
+              failure_summary = target['failureSummaries']['_values'][0]
+              test_suites << { name: target_name, error: failure_summary['message']['_value'] }
+              next
             end
-            Helper::XcresultToJunitHelper.generate_junit(junit_folder, test_suites)
-            Helper::XcresultToJunitHelper.save_screenshot_mapping(map, "#{junit_folder}/attachments/")
+            test_classes = []
+            if defined?(target['tests']['_values'][0]['subtests']['_values'][0]['subtests']['_values'])
+              test_classes = target['tests']['_values'][0]['subtests']['_values'][0]['subtests']['_values']
+            end
+            test_classes.each do |test_class|
+              suite_name = "#{target_name}.#{test_class['name']['_value']}"
+              suite = { name: suite_name, cases: [] }
+              if test_class['subtests']
+                test_class['subtests']['_values'].each do |test|
+                  duration = 0
+                  duration = test['duration']['_value'] if test['duration']
+                  testcase_name = test['name']['_value'].tr('()', '')
+                  tags = testcase_name.split('_')[1..-1]
+                  testcase_name = testcase_name.split('_').first
+                  testcase = { name: testcase_name, time: duration }
+                  map["#{suite_name}.#{testcase_name}"] = { 'files' => [], 'tags' => tags }
+
+                  if defined?(test['summaryRef']['id']['_value'])
+                    summary_ref = test['summaryRef']['id']['_value']
+                    ref = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], summary_ref)
+                    if defined?(ref['activitySummaries']['_values'])
+                      ref['activitySummaries']['_values'].each do |summary|
+                        next unless summary['attachments']
+                        summary['attachments']['_values'].each do |attachment|
+                          timestamp = DateTime.parse(attachment['timestamp']['_value']).to_time.to_i
+                          filename = attachment['filename']['_value']
+                          name = attachment['name']['_value']
+                          folder_name = "#{suite_name}.#{testcase_name}"
+                          id = attachment['payloadRef']['id']['_value']
+                          Helper::XcresultToJunitHelper.fetch_screenshot(params[:xcresult_path], "#{junit_folder}/attachments/#{folder_name}", filename.to_s, id)
+                          map[folder_name]['files'].push({ 'description' => name, 'mime-type' => 'image/png', 'path' => "#{folder_name}/#{filename}", 'timestamp' => timestamp })
+                        end
+                      end
+                    end
+
+                    if defined?(ref['performanceMetrics']['_value'])
+                      performancemetrics = ""
+                      ref['performanceMetrics']['_values'].each do |metric|
+                        metricname = metric['displayName']['_value']
+                        if defined?(metric['baselineAverage']['_value'])
+                          metricbaseline = metric['baselineAverage']['_value']
+                        else
+                          metricbaseline = 0
+                        end
+                        metricmaxdev = metric['maxPercentRelativeStandardDeviation']['_value']
+                        metricunit = metric['unitOfMeasurement']['_value']
+                        metricave = 0
+                        measurecount = 0
+                        metric['measurements']['_values'].each do |measure|
+                          metricave += measure['_value'].to_f
+                          measurecount += 1
+                        end
+                        metricave = (metricave / measurecount).round(2)
+                        if metricbaseline != 0
+                          metricresult = (((metricbaseline.to_f - metricave) / metricbaseline.to_f) * 100).round(2)
+                        else
+                          metricresult = 0
+                        end
+                        performancemetric = "\nMetric: #{metricname}\nResult: #{metricresult}%\nAverage: #{metricave}#{metricunit}\nBaseline: #{metricbaseline}#{metricunit}\nMax Deviation: #{metricmaxdev}%\n\n"
+                        performancemetrics << performancemetric
+                      end
+                      testcase[:performance] = performancemetrics
+                    end
+                  end
+
+                  if test['testStatus']['_value'] == 'Failure'
+                    failure = Helper::XcresultToJunitHelper.load_object(params[:xcresult_path], test['summaryRef']['id']['_value'])['failureSummaries']['_values'][0]
+                    filename = failure['fileName']['_value']
+                    message = failure['message']['_value']
+                    if filename == '<unknown>'
+                      testcase[:error] = message
+                    else
+                      testcase[:failure] = message
+                      testcase[:failure_location] = "#{filename}:#{failure['lineNumber']['_value']}"
+                    end
+                  end
+                  suite[:cases] << testcase
+                end
+              end
+              suite[:count] = suite[:cases].size
+              suite[:failures] = suite[:cases].count { |testcase| testcase[:failure] }
+              suite[:errors] = suite[:cases].count { |testcase| testcase[:error] }
+              test_suites << suite
+            end
           end
+          Helper::XcresultToJunitHelper.generate_junit(junit_folder, test_suites)
+          Helper::XcresultToJunitHelper.save_screenshot_mapping(map, "#{junit_folder}/attachments/")
         end
         UI.message("The xcresult_to_junit plugin has finished!")
       end
@@ -138,17 +136,17 @@ module Fastlane
             description: "The path to the xcresult file",
             optional: false,
             type: String),
-            FastlaneCore::ConfigItem.new(key: :output_path,
-              env_name: "XCRESULT_TO_JUNIT_OUTPUT_PATH",
-              description: "The path where the output will be placed",
-              optional: false,
-              type: String)
-            ]
-          end
-          
-          def self.is_supported?(platform)
-            [:ios, :mac].include?(platform)
-          end
-        end
+          FastlaneCore::ConfigItem.new(key: :output_path,
+            env_name: "XCRESULT_TO_JUNIT_OUTPUT_PATH",
+            description: "The path where the output will be placed",
+            optional: false,
+            type: String)
+        ]
+      end
+
+      def self.is_supported?(platform)
+        [:ios, :mac].include?(platform)
       end
     end
+  end
+end
