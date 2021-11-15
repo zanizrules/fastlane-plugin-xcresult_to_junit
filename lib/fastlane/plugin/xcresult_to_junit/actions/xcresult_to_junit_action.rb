@@ -46,12 +46,14 @@ module Fastlane
                       ref['activitySummaries']['_values'].each do |summary|
                         next unless summary['attachments']
                         summary['attachments']['_values'].each do |attachment|
+                          name = attachment['name']['_value']
+                          next unless name != 'kXCTAttachmentLegacyDiagnosticReportData'
                           timestamp = DateTime.parse(attachment['timestamp']['_value']).to_time.to_i
                           filename = attachment['filename']['_value']
-                          name = attachment['name']['_value']
                           folder_name = "#{suite_name}.#{testcase_name}"
-                          id = attachment['payloadRef']['id']['_value']
-                          Helper::XcresultToJunitHelper.fetch_screenshot(params[:xcresult_path], "#{junit_folder}/attachments/#{folder_name}", filename.to_s, id)
+                          id = attachment.dig('payloadRef', 'id', '_value')
+                          next if id.nil?
+                          Helper::XcresultToJunitHelper.fetch_screenshot(params[:xcresult_path], "#{junit_folder}/attachments/#{folder_name}", filename.to_s, id) 
                           map[folder_name]['files'].push({ 'description' => name, 'mime-type' => 'image/png', 'path' => "#{folder_name}/#{filename}", 'timestamp' => timestamp })
                         end
                       end
