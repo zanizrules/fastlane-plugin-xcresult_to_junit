@@ -8,18 +8,18 @@ module Fastlane
   module Helper
     class XcresultToJunitHelper
       def self.load_object(xcresult_path, id)
-        JSON.parse(FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool get --format json --path #{xcresult_path} --id #{id}"))
+        JSON.parse(FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool get --legacy --format json --path #{xcresult_path} --id #{id}"))
       end
 
       def self.load_results(xcresult_path)
-        JSON.parse(FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool get --format json --path #{xcresult_path}"))
+        JSON.parse(FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool get --legacy --format json --path #{xcresult_path}"))
       end
 
       def self.fetch_screenshot(xcresult_path, output_path, file_name, id)
         unless File.directory?(output_path)
           FileUtils.mkdir(output_path)
         end
-        FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool export --path #{xcresult_path} --output-path \"#{output_path}/#{file_name}\" --id #{id} --type file")
+        FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool export --legacy --path #{xcresult_path} --output-path \"#{output_path}/#{file_name}\" --id #{id} --type file")
       end
 
       def self.save_screenshot_mapping(map_hash, output_path)
