@@ -7,19 +7,19 @@ module Fastlane
 
   module Helper
     class XcresultToJunitHelper
-      def self.load_object(xcresult_path, id)
-        JSON.parse(FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool get --legacy --format json --path #{xcresult_path} --id #{id}"))
+      def self.fetch_tests(xcresult_path)
+        JSON.parse(FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool get test-results tests --path #{xcresult_path}"))
       end
 
-      def self.load_results(xcresult_path)
-        JSON.parse(FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool get --legacy --format json --path #{xcresult_path}"))
-      end
-
-      def self.fetch_screenshot(xcresult_path, output_path, file_name, id)
+      def self.save_attachments(xcresult_path, output_path)
         unless File.directory?(output_path)
           FileUtils.mkdir(output_path)
         end
-        FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool export --legacy --path #{xcresult_path} --output-path \"#{output_path}/#{file_name}\" --id #{id} --type file")
+        FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool export attachments --path #{xcresult_path} --output-path #{output_path}")
+      end
+
+      def self.fetch_attachment_manifest(attachments_folder)
+        JSON.parse(FastlaneCore::CommandExecutor.execute(command: "cat #{attachments_folder}/manifest.json"))
       end
 
       def self.save_screenshot_mapping(map_hash, output_path)
@@ -28,15 +28,18 @@ module Fastlane
         end
       end
 
-      def self.save_device_details_to_file(output_path, device_destination)
-        device_udid = device_destination['targetDeviceRecord']['identifier']['_value']
+      def self.save_device_details_to_file(output_path, devices)
+        device = devices[0]
         device_details = {
-          'udid' => device_udid,
-          'name' => device_destination['targetDeviceRecord']['modelName']['_value'],
-          'os' => device_destination['targetDeviceRecord']['operatingSystemVersion']['_value']
+          'architecture' => device['architecture'],
+          'udid' => device['deviceId'],
+          'name' => device['deviceName'],
+          'model' => device['modelName'],
+          'os' => device['osVersion'],
+          'platform' => device['platform']
         }.to_json
 
-        junit_folder = "#{output_path}/ios-#{device_udid}.junit"
+        junit_folder = "#{output_path}/ios-#{device['deviceId']}.junit"
         FileUtils.rm_rf(junit_folder)
         FileUtils.mkdir_p("#{junit_folder}/attachments")
         File.open("#{junit_folder}/device.json", 'w') do |f|

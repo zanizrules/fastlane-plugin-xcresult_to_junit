@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+desc 'Lane used for testing changes. Diffeent sample xcresults should be used for testing before publishing new versions.'
 lane :test do
-  xcresult_to_junit(xcresult_path: './fastlane/sample.xcresult', output_path: './fastlane/test_output/')
+  xcresult_to_junit(xcresult_path: './fastlane/sample.xcresult', output_path: './fastlane/test_output')
 end

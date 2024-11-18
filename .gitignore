@@ -10,6 +10,6 @@ Gemfile.lock
 fastlane/test_output/
 fastlane/README.md
 fastlane/report.xml
-fastlane/sample.xcresult
+fastlane/*.xcresult
 coverage
 test-results

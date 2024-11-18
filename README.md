@@ -62,7 +62,7 @@ rake
 To automatically fix many of the styling issues, use
 
 ```bash
-rubocop -a
+rubocop -A
 ```
 
 ## Issues and Feedback
