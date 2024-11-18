@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 require 'fastlane_core/ui/ui'
 require 'json'
 require 'fileutils'
 
 module Fastlane
-  UI = FastlaneCore::UI unless Fastlane.const_defined?("UI")
+  UI = FastlaneCore::UI unless Fastlane.const_defined?('UI')
 
   module Helper
     class XcresultToJunitHelper
@@ -12,9 +14,7 @@ module Fastlane
       end
 
       def self.save_attachments(xcresult_path, output_path)
-        unless File.directory?(output_path)
-          FileUtils.mkdir(output_path)
-        end
+        FileUtils.mkdir(output_path) unless File.directory?(output_path)
         FastlaneCore::CommandExecutor.execute(command: "xcrun xcresulttool export attachments --path #{xcresult_path} --output-path #{output_path}")
       end
 
@@ -45,7 +45,7 @@ module Fastlane
         File.open("#{junit_folder}/device.json", 'w') do |f|
           f << device_details
         end
-        return junit_folder
+        junit_folder
       end
 
       def self.junit_file_start
@@ -107,9 +107,7 @@ module Fastlane
                 elsif testcase[:error]
                   Helper::XcresultToJunitHelper.junit_testcase_error(testcase)
                 end
-                if testcase[:performance]
-                  Helper::XcresultToJunitHelper.junit_testcase_performance(testcase)
-                end
+                Helper::XcresultToJunitHelper.junit_testcase_performance(testcase) if testcase[:performance]
                 Helper::XcresultToJunitHelper.junit_testcase_end
               end
             end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'fastlane/plugin/xcresult_to_junit/version'
 
 module Fastlane

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'date'
 require 'fastlane/action'
 require_relative '../helper/xcresult_to_junit_helper'
@@ -6,7 +8,7 @@ module Fastlane
   module Actions
     class XcresultToJunitAction < Action
       def self.run(params)
-        UI.message("The xcresult_to_junit plugin has started!")
+        UI.message('The xcresult_to_junit plugin has started!')
         result = Helper::XcresultToJunitHelper.fetch_tests(params[:xcresult_path])
 
         devices = result['devices']
@@ -25,16 +27,14 @@ module Fastlane
               test_cases = []
               test_suite['children'].each do |test_case|
                 duration = 0.0
-                if test_case['duration']
-                  duration = test_case['duration'].sub('s', '').to_f
-                end
+                duration = test_case['duration'].sub('s', '').to_f if test_case['duration']
                 full_testcase_name = test_case['name'].sub('()', '')
-                tags = full_testcase_name.split('_')[1..-1]
+                tags = full_testcase_name.split('_')[1..]
                 testcase = { name: full_testcase_name, time: duration }
                 count += 1
-                if test_case['result'] == 'Passed' then
+                if test_case['result'] == 'Passed'
                   passed += 1
-                elsif test_case['result'] == 'Failed' then 
+                elsif test_case['result'] == 'Failed'
                   failed += 1
                   test_case['children'].each do |failure|
                     testcase[:failure] = failure['name'].split(': ')[1]
@@ -44,12 +44,12 @@ module Fastlane
                 test_cases << testcase
                 map["#{suite_name}.#{full_testcase_name}"] = { 'files' => [], 'tags' => tags }
               end
-              suite = { name: "#{suite_name}", count: count, failures: failed, errors: 0, cases: test_cases }
+              suite = { name: suite_name.to_s, count: count, failures: failed, errors: 0, cases: test_cases }
               test_suites << suite
             end
           end
         end
-        
+
         Helper::XcresultToJunitHelper.generate_junit(junit_folder, test_suites)
         attachments_folder = "#{junit_folder}/attachments"
         Helper::XcresultToJunitHelper.save_attachments(params[:xcresult_path], attachments_folder)
@@ -64,24 +64,23 @@ module Fastlane
             name = attachment['suggestedHumanReadableName']
             filename = attachment['exportedFileName']
             mime_type = 'image/png'
-            if filename.end_with?(".txt") then
-              mime_type = 'text/plain'
-            end
+            mime_type = 'text/plain' if filename.end_with?('.txt')
             timestamp = attachment['timestamp']
-            map[folder_name]['files'].push({ 'description' => name, 'mime-type' => mime_type, 'path' => filename, 'timestamp' => timestamp })
+            map[folder_name]['files'].push({ 'description' => name, 'mime-type' => mime_type, 'path' => filename,
+                                             'timestamp' => timestamp })
           end
         end
 
         Helper::XcresultToJunitHelper.save_screenshot_mapping(map, attachments_folder)
-        UI.message("The xcresult_to_junit plugin has finished!")
+        UI.message('The xcresult_to_junit plugin has finished!')
       end
 
       def self.description
-        "Produces junit xml files from Xcode 11+ xcresult files"
+        'Produces junit xml files from Xcode 11+ xcresult files'
       end
 
       def self.authors
-        ["Shane Birdsall"]
+        ['Shane Birdsall']
       end
 
       def self.return_value
@@ -89,26 +88,26 @@ module Fastlane
       end
 
       def self.details
-        "By using the xcresulttool this plugin parses xcresult files and generates junit reports to be used with other tools to display iOS test results"
+        'By using the xcresulttool this plugin parses xcresult files and generates junit reports to be used with other tools to display iOS test results'
       end
 
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(key: :xcresult_path,
-            env_name: "XCRESULT_TO_JUNIT_XCRESULT_PATH",
-            description: "The path to the xcresult file",
-            optional: false,
-            type: String),
+                                       env_name: 'XCRESULT_TO_JUNIT_XCRESULT_PATH',
+                                       description: 'The path to the xcresult file',
+                                       optional: false,
+                                       type: String),
           FastlaneCore::ConfigItem.new(key: :output_path,
-            env_name: "XCRESULT_TO_JUNIT_OUTPUT_PATH",
-            description: "The path where the output will be placed",
-            optional: false,
-            type: String)
+                                       env_name: 'XCRESULT_TO_JUNIT_OUTPUT_PATH',
+                                       description: 'The path where the output will be placed',
+                                       optional: false,
+                                       type: String)
         ]
       end
 
       def self.is_supported?(platform)
-        [:ios, :mac].include?(platform)
+        %i[ios mac].include?(platform)
       end
     end
   end
