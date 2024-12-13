@@ -79,7 +79,14 @@ module Fastlane
       end
 
       def self.junit_testcase_failure(testcase)
-        puts("<failure message=#{testcase[:failure].encode(xml: :attr)}>#{testcase[:failure_location].encode(xml: :text)}</failure>")
+        if testcase[:failure].length != testcase[:failure_location].length
+          raise "Mismatch in lengths: testcase[:failure] and testcase[:failure_location] must have the same length."
+        end
+        for index in 0...testcase[:failure].length
+          failure = testcase[:failure][index]
+          failure_location = testcase[:failure_location][index]
+          puts("<failure message=#{failure.encode(xml: :attr)}>#{failure_location.encode(xml: :text)}</failure>")
+        end
       end
 
       def self.junit_testcase_error(testcase)

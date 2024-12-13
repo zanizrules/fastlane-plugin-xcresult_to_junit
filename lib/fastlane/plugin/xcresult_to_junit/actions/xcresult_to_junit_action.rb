@@ -35,10 +35,20 @@ module Fastlane
                 if test_case['result'] == 'Passed'
                   passed += 1
                 elsif test_case['result'] == 'Failed'
-                  failed += 1
+                  testcase[:failure] ||= []
+                  testcase[:failure_location] ||= []
                   test_case['children'].each do |failure|
-                    testcase[:failure] = failure['name'].split(': ')[1]
-                    testcase[:failure_location] = failure['name'].split(': ')[0]
+                    if failure['nodeType'] == 'Repetition'
+                      failure['children'].each do |retry_failure|
+                        failed += 1
+                        testcase[:failure] << retry_failure['name']
+                        testcase[:failure_location] << failure['name']
+                      end
+                    elsif failure['nodeType'] == 'Failure Message'
+                      failed += 1
+                      testcase[:failure] << failure['name']
+                      testcase[:failure_location] << failure['name'].split(': ')[0]
+                    end
                   end
                 end
                 test_cases << testcase
@@ -60,7 +70,7 @@ module Fastlane
           test_identifier = test_attachment['testIdentifier']
           folder_name = test_identifier.sub('()', '').sub('/', '.')
 
-          test_attachment['attachments'].each do |attachment|
+          test_attachment['attachments'].reverse().each do |attachment|
             name = attachment['suggestedHumanReadableName']
             filename = attachment['exportedFileName']
             mime_type = 'image/png'
