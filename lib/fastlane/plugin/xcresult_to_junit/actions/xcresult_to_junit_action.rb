@@ -35,17 +35,16 @@ module Fastlane
                 if test_case['result'] == 'Passed'
                   passed += 1
                 elsif test_case['result'] == 'Failed'
+                  failed += 1
                   testcase[:failure] ||= []
                   testcase[:failure_location] ||= []
                   test_case['children'].each do |failure|
                     if failure['nodeType'] == 'Repetition'
                       failure['children'].each do |retry_failure|
-                        failed += 1
                         testcase[:failure] << retry_failure['name']
                         testcase[:failure_location] << failure['name']
                       end
                     elsif failure['nodeType'] == 'Failure Message'
-                      failed += 1
                       testcase[:failure] << failure['name']
                       testcase[:failure_location] << failure['name'].split(': ')[0]
                     end
