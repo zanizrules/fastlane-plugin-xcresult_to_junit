@@ -75,6 +75,7 @@ module Fastlane
             mime_type = 'image/png'
             mime_type = 'text/plain' if filename.end_with?('.txt')
             timestamp = attachment['timestamp']
+            map[folder_name] ||= { 'files' => [] }
             map[folder_name]['files'].push({ 'description' => name, 'mime-type' => mime_type, 'path' => filename,
                                              'timestamp' => timestamp })
           end
