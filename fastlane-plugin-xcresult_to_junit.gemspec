@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.name          = 'fastlane-plugin-xcresult_to_junit'
   spec.version       = Fastlane::XcresultToJunit::VERSION
   spec.author        = 'Shane Birdsall'
-  spec.email         = 'shane.birdsall@fiserv.com'
+  spec.email         = 'zanizrules@gmail.com'
 
   spec.summary       = 'Produces junit xml files from Xcode 11+ xcresult files'
   spec.homepage      = 'https://github.com/zanizrules/fastlane-plugin-xcresult_to_junit'
